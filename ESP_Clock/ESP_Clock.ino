@@ -2,6 +2,7 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include <TFT_eSPI.h>
+#include <RBD_Timer.h>
 #include "bmp.h"
 #include "fonts.h"
 
@@ -9,31 +10,38 @@
 #define DATE (1 << 2)
 #define FORECAST (1 << 3)
 
-#define WIFI_SSID "<WiFi名称>"
-#define WIFI_PASS "<WiFi密码>"
-#define UTC_OFFSET 8  // 时区, 北京时间东八区
-#define UPDATE_INTERVAL_M 15  // 从心知天气获取数据间隔时间
+#define WIFI_SSID "ChinaNet-J6Fk"
+#define WIFI_PASS "DmgZg2312"
+#define UTC_OFFSET 8
+#define UPDATE_INTERVAL_M 15
 
 const char* ntpServer = "ntp.aliyun.com";
 const char* host = "api.seniverse.com";
-const String key = "<心知天气密钥>";
-const String location = "<当前城市ID或名称>";
+const String key = "SvapyYFkj7EvAAqfG";
+const String location = "WQJ6YY8MHZP0";
 
 WiFiClientSecure client;
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
+TFT_eSprite st = TFT_eSprite(&tft);
+
+RBD::Timer timer1(60000 * UPDATE_INTERVAL_M);  // 获取心知天气信息计时器
+RBD::Timer timer2(10000);                      // 滚动文字的驻屏显示时间
+RBD::Timer timer3(50);                         // 限制滚动文字滚动太快
 
 typedef struct {
   String text;
   int code;
   int high;
   int low;
-  // String windDirection;
-  // int windScale;
+  String windDirection;
+  double windSpeed;
   int humidity;
 } forecast;
 forecast day[3];
 forecast now;
+String stext[3];
+int stextIndex = 0;
 
 char ot[9];
 char t[9];
@@ -41,7 +49,8 @@ char odate[11];
 char date[11];
 char wday[4];
 uint8_t updateThis = 0xFF;
-unsigned long targetTime = 0;
+int tcount = 0;
+bool canScroll = false;
 
 void setup() {
   tft.begin();
@@ -52,22 +61,17 @@ void setup() {
   tft.print("Connecting WiFi.. ");
 
   Serial.begin(115200);
-  Serial.print("Connecting to ");
-  Serial.print(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-  Serial.println("WiFi connected");
+  while (WiFi.status() != WL_CONNECTED) delay(1500);
   tft.println("OK");
 
   client.setInsecure();  // HTTPS
 
   tft.print("Booting.. ");
-  // NTP服务器
-  configTime(3600 * UTC_OFFSET, 0, ntpServer);
+  timer1.restart();  // 计时器
+  timer2.restart();
+  timer3.restart();
+  configTime(3600 * UTC_OFFSET, 0, ntpServer);  // NTP服务器
   updateForecastDaily();
   updateWeather();
   tft.println("DONE");
@@ -77,7 +81,11 @@ void setup() {
   spr.setColorDepth(8);
   spr.createSprite(260, 48);
 
-  display();
+  st.setColorDepth(8);
+  st.createSprite(260, 17);
+  st.fillSprite(TFT_BLACK);
+  st.setTextColor(TFT_WHITE);
+  st.setTextDatum(TC_DATUM);
 }
 
 void loop() {
@@ -98,12 +106,14 @@ void loop() {
     updateThis |= TIME;
   }
 
-  if (targetTime < millis()) {
+  if (timer1.onRestart()) {
     updateForecastDaily();
     updateWeather();
     updateThis |= FORECAST;
-    targetTime = millis() + 60000 * UPDATE_INTERVAL_M;
   }
+
+  if (timer2.onRestart())
+    canScroll = true;
 
   display();
 }
@@ -124,6 +134,12 @@ const uint8_t* toIconBitmap(int codeNum) {
   }
 }
 
+void set_stext() {
+  stext[0] = "Now:  " + now.text + "  " + String(now.low) + "`C";
+  stext[1] = "Wind speed: " + String(day[0].windDirection) + "  " + String(day[0].windSpeed) + " km/s";
+  stext[2] = "IP address: " + (WiFi.localIP()).toString();
+}
+
 void display() {
   // 刷新前重置视窗, 避免出现位置错误
   tft.resetViewport();
@@ -135,15 +151,21 @@ void display() {
 
   // 绘制时钟和当前天气组件
   tft.setViewport(5, 5, 310, 120);
-  // tft.frameViewport(TFT_WHITE, 1);
-  if (FORECAST & updateThis) {
-    tft.fillRect(4, 7, 302, 17, TFT_BLACK);
-    tft.setTextDatum(TC_DATUM);
-    tft.setTextColor(TFT_WHITE);
-    tft.loadFont(unifont);
-    tft.drawString("当前  " + now.text + "  " + String(now.low) + "°C", 155, 14);
-    tft.unloadFont();
+  tft.drawXBitmap(-14, 86, clock48x48, 48, 48, 0x39E7);
+  st.pushSprite(25, 14);
+
+  if (timer3.onRestart() && canScroll) {
+    st.scroll(0, -1);
+    tcount--;
   }
+  if (tcount <= 0) {
+    tcount = 17;
+    canScroll = false;
+    set_stext();
+    st.drawString(stext[stextIndex], 130, 0, 2);
+    stextIndex = (stextIndex < 2 ? stextIndex + 1 : 0);
+  }
+
   if (TIME & updateThis) {
     spr.fillSprite(TFT_BLACK);
     spr.setTextDatum(MC_DATUM);
@@ -204,7 +226,7 @@ bool sendRequest(const char* host, String path) {
 
 void updateWeather() {
   if (!sendRequest(
-        host, "/v3/weather/now.json?key=" + key + "&location=" + location)) {
+        host, "/v3/weather/now.json?key=" + key + "&location=" + location + "&language=en")) {
     return;
   }
 
@@ -226,7 +248,7 @@ void updateWeather() {
 
 void updateForecastDaily() {
   if (!sendRequest(
-        host, "/v3/weather/daily.json?key=" + key + "&location=" + location)) {
+        host, "/v3/weather/daily.json?key=" + key + "&location=" + location + "&language=en")) {
     return;
   }
 
@@ -243,8 +265,8 @@ void updateForecastDaily() {
     day[i].code = doc["results"][0]["daily"][i]["code_day"].as<int>();
     day[i].high = doc["results"][0]["daily"][i]["high"].as<int>();
     day[i].low = doc["results"][0]["daily"][i]["low"].as<int>();
-    // day[i].windDirection = doc["results"][0]["daily"][i]["wind_direction"].as<String>();
-    // day[i].windScale = doc["results"][0]["daily"][i]["wind_scale"].as<int>();
+    day[i].windDirection = doc["results"][0]["daily"][i]["wind_direction"].as<String>();
+    day[i].windSpeed = doc["results"][0]["daily"][i]["wind_speed"].as<double>();
     day[i].humidity = doc["results"][0]["daily"][i]["humidity"].as<int>();
   }
 
