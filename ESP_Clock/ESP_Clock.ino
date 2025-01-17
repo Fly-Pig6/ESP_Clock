@@ -9,15 +9,15 @@
 #define DATE (1 << 2)
 #define FORECAST (1 << 3)
 
-#define WIFI_SSID "ChinaNet-J6Fk"
-#define WIFI_PASS "DmgZg2312"
-#define UTC_OFFSET 8
-#define UPDATE_INTERVAL_M 15
+#define WIFI_SSID "<WiFi名称>"
+#define WIFI_PASS "<WiFi密码>"
+#define UTC_OFFSET 8  // 时区, 北京时间东八区
+#define UPDATE_INTERVAL_M 15  // 从心知天气获取数据间隔时间
 
 const char* ntpServer = "ntp.aliyun.com";
 const char* host = "api.seniverse.com";
-const String key = "SvapyYFkj7EvAAqfG";
-const String location = "WQJ6YY8MHZP0";
+const String key = "<心知天气密钥>";
+const String location = "<当前城市ID或名称>";
 
 WiFiClientSecure client;
 TFT_eSPI tft = TFT_eSPI();
