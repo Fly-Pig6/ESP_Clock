@@ -3,21 +3,21 @@
 #include <ArduinoJson.h>
 #include <TFT_eSPI.h>
 #include "bmp.h"
-#include "unifont.h"
+#include "fonts.h"
 
 #define TIME (1 << 1)
 #define DATE (1 << 2)
 #define FORECAST (1 << 3)
 
-#define WIFI_SSID "<WiFi名称>"
-#define WIFI_PASS "<WiFi密码>"
-#define UTC_OFFSET 8  // 时区, 北京时间东八区
-#define UPDATE_INTERVAL_M 15    // 从心知接口获取天气数据的频率
+#define WIFI_SSID "ChinaNet-J6Fk"
+#define WIFI_PASS "DmgZg2312"
+#define UTC_OFFSET 8
+#define UPDATE_INTERVAL_M 15
 
 const char* ntpServer = "ntp.aliyun.com";
 const char* host = "api.seniverse.com";
-const String key = "<心知天气key>";
-const String location = "WQJ6YY8MHZP0";    // 可以使用城市ID或者城市拼音, 例如西安的ID是WQJ6YY8MHZP0, 也可以直接填'xian'
+const String key = "SvapyYFkj7EvAAqfG";
+const String location = "WQJ6YY8MHZP0";
 
 WiFiClientSecure client;
 TFT_eSPI tft = TFT_eSPI();
@@ -141,18 +141,16 @@ void display() {
     tft.setTextDatum(TC_DATUM);
     tft.setTextColor(TFT_WHITE);
     tft.loadFont(unifont);
-    tft.drawString("当前 " + now.text + " " + String(now.low) + "°C", 155, 10);
+    tft.drawString("当前  " + now.text + "  " + String(now.low) + "°C", 155, 14);
     tft.unloadFont();
   }
   if (TIME & updateThis) {
     spr.fillSprite(TFT_BLACK);
     spr.setTextDatum(MC_DATUM);
-    spr.setTextSize(1);
-    spr.setTextColor(0x39E7);
-    // spr.drawString("88:88:88", 155, 60, 7);
-    spr.drawString("88:88:88", 130, 24, 7);
     spr.setTextColor(TFT_WHITE);
+    spr.loadFont(gravity_bold);
     spr.drawString(t, 130, 24, 7);
+    spr.unloadFont();
     spr.pushSprite(25, 36);
   }
   if (DATE & updateThis) {
