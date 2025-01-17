@@ -136,7 +136,7 @@ const uint8_t* toIconBitmap(int codeNum) {
 
 void set_stext() {
   stext[0] = "Now:  " + now.text + "  " + String(now.low) + "`C";
-  stext[1] = "Wind speed: " + String(day[0].windDirection) + "  " + String(day[0].windSpeed) + " km/s";
+  stext[1] = "Wind speed: " + String(day[0].windDirection) + "  " + String(day[0].windSpeed) + " km/h";
   stext[2] = "IP address: " + (WiFi.localIP()).toString();
 }
 
