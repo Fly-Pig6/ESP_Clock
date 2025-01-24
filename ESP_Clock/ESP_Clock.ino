@@ -1,15 +1,8 @@
 /* bilibili@可爱的狗子汪
  */
 
-#define XIAO_ESP32C3_USED  // 如果编译错误提示缺少库, 注释掉这一行重新编译
-
 #include <WiFi.h>
-#ifndef XIAO_ESP32C3_USED
-#include <NetworkClientSecure.h>
-#else
 #include <WiFiClientSecure.h>
-#endif
-
 #include <ArduinoJson.h>
 #include <TFT_eSPI.h>
 #include <RBD_Timer.h>
@@ -20,29 +13,19 @@
 #define DATE (1 << 2)
 #define FORECAST (1 << 3)
 
-/************** 按需要修改以下部分 *********************/
-
-#define WIFI_SSID "< WiFi_SSID >"  // <- ! 必须修改该字串
-#define WIFI_PASS "< WiFi密码 >"   // <- ! 必须修改该字串
 #define UTC_OFFSET 8
 #define UPDATE_INTERVAL_M 15
 
-/*
- * [心知天气 - 登录](https://www.seniverse.com/login)
- * [心知天气 - 控制台](https://www.seniverse.com/dashboard)
- */
-
+/************** 按需要修改以下部分 *********************/
+#define WIFI_SSID "<WIFI名称>"  // <- ! 必须修改该字串
+#define WIFI_PASS "<WIFI密码>"  // <- ! 必须修改该字串
 const char* ntpServer = "ntp.aliyun.com";
 const char* host = "api.seniverse.com";
-const String key = "< API_KEY >";        // <- ! 必须修改该字串
-const String location = "< 所在城市 >";  // <- ! 必须修改该字串
-
+const String key = "<API_KEY>";        // <- ! 必须修改该字串
+const String location = "<所在城市>";  // <- ! 必须修改该字串
 /*****************************************************/
-#ifndef XIAO_ESP32C3_USED
-NetworkClientSecure client;
-#else
+
 WiFiClientSecure client;
-#endif
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
@@ -77,8 +60,9 @@ bool canScroll = false;
 
 void setup() {
   tft.begin();
-  tft.setRotation(3);
+  tft.setRotation(1);
   tft.fillScreen(TFT_BLUE);
+  tft.setTextColor(TFT_WHITE);
   tft.println("Please wait...");
 
   Serial.begin(115200);
@@ -140,7 +124,7 @@ void loop() {
 
 /*
  * 根据API返回的JSON数据中的`code`字段, 绘制相应的天气图标
- * "bmp.h"中修改对应图标或者添加更多天气图标!
+ * "bmp.h"中修改对应图标或者添加更多天气图标
  */
 const uint8_t* toIconBitmap(int codeNum) {
   switch (codeNum) {
@@ -154,6 +138,15 @@ const uint8_t* toIconBitmap(int codeNum) {
     case 7: return _5;
     case 8: return _5;
     case 9: return _9;    // 阴
+    case 10: return _10;  // 阵雨
+    case 11: return _11;  // 雷阵雨
+    case 13: return _13;  // 小雨
+    case 14: return _13;
+    case 15: return _13;
+    case 16: return _16;  // 暴雨
+    case 17: return _16;
+    case 18: return _16;
+    case 20: return _20;  //雨夹雪
     default: return _99;  // 未知
   }
 }
