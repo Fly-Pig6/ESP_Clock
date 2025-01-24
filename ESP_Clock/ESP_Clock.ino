@@ -16,12 +16,11 @@
 #define UTC_OFFSET 8
 #define UPDATE_INTERVAL_M 15
 
-/************** 按需要修改以下部分 *********************/
+/* 修改以下变量 */
 #define WIFI_SSID "<WIFI名称>"
 #define WIFI_PASS "<WIFI密码>"
 const String key = "<API_KEY>";
 const String location = "<所在城市>";
-/*****************************************************/
 
 const char* ntpServer = "ntp.aliyun.com";
 const char* host = "api.seniverse.com";
