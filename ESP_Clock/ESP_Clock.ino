@@ -17,13 +17,14 @@
 #define UPDATE_INTERVAL_M 15
 
 /************** 按需要修改以下部分 *********************/
-#define WIFI_SSID "<WIFI名称>"  // <- ! 必须修改该字串
-#define WIFI_PASS "<WIFI密码>"  // <- ! 必须修改该字串
+#define WIFI_SSID "<WIFI名称>"
+#define WIFI_PASS "<WIFI密码>"
+const String key = "<API_KEY>";
+const String location = "<所在城市>";
+/*****************************************************/
+
 const char* ntpServer = "ntp.aliyun.com";
 const char* host = "api.seniverse.com";
-const String key = "<API_KEY>";        // <- ! 必须修改该字串
-const String location = "<所在城市>";  // <- ! 必须修改该字串
-/*****************************************************/
 
 WiFiClientSecure client;
 
