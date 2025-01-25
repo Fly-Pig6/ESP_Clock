@@ -8,6 +8,7 @@
 #include <RBD_Timer.h>
 #include "bmp.h"
 #include "fonts.h"
+#include "cfg.h"
 
 #define TIME (1 << 1)
 #define DATE (1 << 2)
@@ -15,12 +16,6 @@
 
 #define UTC_OFFSET 8
 #define UPDATE_INTERVAL_M 15
-
-/* 修改以下变量 */
-#define WIFI_SSID "<WIFI名称>"
-#define WIFI_PASS "<WIFI密码>"
-const String key = "<API_KEY>";
-const String location = "<所在城市>";
 
 const char* ntpServer = "ntp.aliyun.com";
 const char* host = "api.seniverse.com";
@@ -78,14 +73,15 @@ void setup() {
   updateForecastDaily();
   updateWeather();
 
-  tft.fillScreen(TFT_BLACK);
+  tft.fillScreen(BG_COLOUR);
   spr.setColorDepth(8);
   spr.createSprite(260, 48);
 
   st.setColorDepth(8);
   st.createSprite(260, 17);
-  st.fillSprite(TFT_BLACK);
-  st.setTextColor(TFT_WHITE);
+  st.fillSprite(BG_COLOUR);
+  st.setScrollRect(0, 0, 260, 17, BG_COLOUR);
+  st.setTextColor(TEXT_COLOUR);
   st.setTextDatum(TC_DATUM);
 }
 
@@ -163,14 +159,14 @@ void set_stext() {
 void display() {
   tft.resetViewport();
   // 圆角矩形框架
-  tft.drawRoundRect(5, 5, 310, 120, 9, 0x39E7);
-  tft.drawRoundRect(5, 130, 100, 105, 9, 0x39E7);
-  tft.drawRoundRect(110, 130, 100, 105, 9, 0x39E7);
-  tft.drawRoundRect(215, 130, 100, 105, 9, 0x39E7);
+  tft.drawRoundRect(5, 5, 310, 120, 9, MAIN_COLOUR);
+  tft.drawRoundRect(5, 130, 100, 105, 9, MAIN_COLOUR);
+  tft.drawRoundRect(110, 130, 100, 105, 9, MAIN_COLOUR);
+  tft.drawRoundRect(215, 130, 100, 105, 9, MAIN_COLOUR);
 
   // 滚动文字
   tft.setViewport(5, 5, 310, 120);
-  tft.drawXBitmap(-10, 82, clock48x48, 48, 48, 0x39E7);
+  tft.drawXBitmap(-10, 82, clock48x48, 48, 48, MAIN_COLOUR);
   st.pushSprite(25, 14);
   // 文字滚动效果
   if (timer3.onRestart() && canScroll) {
@@ -183,13 +179,13 @@ void display() {
     canScroll = false;
     set_stext();
     st.drawString(stext[stextIndex], 130, 0, 2);
-    stextIndex = (stextIndex < 2 ? stextIndex + 1 : 0);
+    stextIndex = (stextIndex < 2) ? stextIndex + 1 : 0;
   }
   // 时间文字
   if (TIME & updateThis) {
-    spr.fillSprite(TFT_BLACK);
+    spr.fillSprite(BG_COLOUR);
     spr.setTextDatum(MC_DATUM);
-    spr.setTextColor(TFT_WHITE);
+    spr.setTextColor(TEXT_COLOUR);
     spr.loadFont(gravity_bold);
     spr.drawString(t, 130, 24, 7);
     spr.unloadFont();
@@ -199,22 +195,22 @@ void display() {
   if (DATE & updateThis) {
     tft.setTextDatum(BC_DATUM);
     tft.setTextSize(2);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextColor(TEXT_COLOUR, BG_COLOUR);
     tft.drawString(String(wday) + " " + String(date), 155, 110);
   }
   // 绘制底部天气栏
   if (FORECAST & updateThis) {
     tft.resetViewport();
-    tft.fillRect(5, 130, 310, 105, TFT_BLACK);
+    tft.fillRect(5, 130, 310, 105, BG_COLOUR);
     for (int i = 0; i < 3; i++) {
       tft.resetViewport();
       tft.setViewport(5 + 105 * i, 130, 100, 105);
-      tft.drawXBitmap(26, 10, toIconBitmap(day[i].code), WIDTH, HEIGHT, TFT_WHITE);
+      tft.drawXBitmap(26, 10, toIconBitmap(day[i].code), WIDTH, HEIGHT, ICON_COLOUR);
 
       tft.drawXBitmap(7, 62, thermometer16x16, 16, 16, TFT_SKYBLUE);
       tft.setTextDatum(TL_DATUM);
       tft.setTextSize(1);
-      tft.setTextColor(TFT_WHITE);
+      tft.setTextColor(TEXT_COLOUR);
       tft.drawString(String(day[i].low) + "` / " + String(day[i].high) + "`", 30, 62, 2);
 
       tft.drawXBitmap(7, 84, hygrometer16x16, 16, 16, TFT_ORANGE);
@@ -239,10 +235,7 @@ bool sendRequest(const char* host, String path) {
 
   while (client.connected()) {
     String line = client.readStringUntil('\n');
-    if (line == "\r") {
-      Serial.println("headers received");
-      break;
-    }
+    if (line == "\r") break;
   }
   return true;
 }
