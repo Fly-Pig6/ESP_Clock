@@ -63,6 +63,7 @@ void setup() {
   Serial.begin(115200);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) delay(1500);
+  Serial.println("[INFO] WiFi connected");
 
   client.setInsecure();  // HTTPS不安全连接
 
@@ -91,6 +92,7 @@ void setup() {
 void loop() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {  // 获取NTP时间
+    Serial.println("[WARN] Failed to get NTP time !");
     return;
   }
   // 更新时间刷新时间文字
@@ -224,7 +226,9 @@ void display() {
  * 向指定地址发送GET请求, 并跳过响应头
  */
 bool sendRequest(const char* host, String path) {
+  Serial.printf("[INFO] Connecting to %s%s\n", host, path.c_str());
   if (!client.connect(host, 443)) {
+    Serial.println("    - [WARN] Connection failed !");
     return false;
   }
   client.println(
@@ -233,8 +237,10 @@ bool sendRequest(const char* host, String path) {
   client.println("Connection: close");
   client.println();
 
+  Serial.println("");
   while (client.connected()) {
     String line = client.readStringUntil('\n');
+    Serial.println(line);
     if (line == "\r") break;
   }
   return true;
@@ -246,13 +252,14 @@ bool sendRequest(const char* host, String path) {
 void updateWeather() {
   if (!sendRequest(
         host, "/v3/weather/now.json?key=" + key + "&location=" + location + "&language=en")) {
+    Serial.println("[ERR] updateWeather() failed !");
     return;
   }
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, client);
   if (error) {
-    Serial.print("deserializeJson() failed !");
+    Serial.print("[ERR] updateWeather() -> **deserializeJson()** failed !");
     client.stop();
     return;
   }
@@ -269,13 +276,14 @@ void updateWeather() {
 void updateForecastDaily() {
   if (!sendRequest(
         host, "/v3/weather/daily.json?key=" + key + "&location=" + location + "&language=en")) {
+    Serial.println("[ERR] updateForecastDaily() failed !");
     return;
   }
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, client);
   if (error) {
-    Serial.print("deserializeJson() failed !");
+    Serial.print("[ERR] updateForecastDaily() -> **deserializeJson()** failed !");
     client.stop();
     return;
   }

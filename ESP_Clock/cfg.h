@@ -1,10 +1,10 @@
 /* 配置文件
  */
 
-#define WIFI_SSID "WiFi SSID"
+#define WIFI_SSID "WiFi名称"
 #define WIFI_PASS "WiFi密码"
-const String key = "产品密钥";
-const String location = "城市名";
+const String key = "心知API私钥";
+const String location = "城市名称";
 
 #define DRAK_MODE 0 /* 暗色模式开关: `1` 代表启用 */
 
