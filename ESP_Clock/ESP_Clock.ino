@@ -228,7 +228,7 @@ void display() {
 bool sendRequest(const char* host, String path) {
   Serial.printf("[INFO] Connecting to %s%s\n", host, path.c_str());
   if (!client.connect(host, 443)) {
-    Serial.println("    - [WARN] Connection failed !");
+    Serial.println(" \t[WARN] Connection failed !");
     return false;
   }
   client.println(
@@ -252,14 +252,14 @@ bool sendRequest(const char* host, String path) {
 void updateWeather() {
   if (!sendRequest(
         host, "/v3/weather/now.json?key=" + key + "&location=" + location + "&language=en")) {
-    Serial.println("[ERR] updateWeather() failed !");
+    Serial.println("[FAIL] updateWeather() failed !");
     return;
   }
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, client);
   if (error) {
-    Serial.print("[ERR] updateWeather() -> **deserializeJson()** failed !");
+    Serial.print("[FAIL] updateWeather() -> **deserializeJson()** failed !");
     client.stop();
     return;
   }
@@ -276,14 +276,14 @@ void updateWeather() {
 void updateForecastDaily() {
   if (!sendRequest(
         host, "/v3/weather/daily.json?key=" + key + "&location=" + location + "&language=en")) {
-    Serial.println("[ERR] updateForecastDaily() failed !");
+    Serial.println("[FAIL] updateForecastDaily() failed !");
     return;
   }
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, client);
   if (error) {
-    Serial.print("[ERR] updateForecastDaily() -> **deserializeJson()** failed !");
+    Serial.print("[FAIL] updateForecastDaily() -> **deserializeJson()** failed !");
     client.stop();
     return;
   }
