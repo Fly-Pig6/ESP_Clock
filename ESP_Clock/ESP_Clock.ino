@@ -55,7 +55,7 @@ bool canScroll = false;
 
 void setup() {
   tft.begin();
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.fillScreen(TFT_BLUE);
   tft.setTextColor(TFT_WHITE);
   tft.println("Please wait...");
@@ -63,7 +63,7 @@ void setup() {
   Serial.begin(115200);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) delay(1500);
-  Serial.println("[INFO] WiFi connected");
+  Serial.println("WiFi connected");
 
   client.setInsecure();  // HTTPS不安全连接
 
@@ -75,10 +75,10 @@ void setup() {
   updateWeather();
 
   tft.fillScreen(BG_COLOUR);
-  spr.setColorDepth(8);
+  spr.setColorDepth(16);
   spr.createSprite(260, 48);
 
-  st.setColorDepth(8);
+  st.setColorDepth(16);
   st.createSprite(260, 17);
   st.fillSprite(BG_COLOUR);
   st.setScrollRect(0, 0, 260, 17, BG_COLOUR);
@@ -92,7 +92,7 @@ void setup() {
 void loop() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {  // 获取NTP时间
-    Serial.println("[WARN] Failed to get NTP time !");
+    Serial.println("E: Failed to get NTP time!");
     return;
   }
   // 更新时间刷新时间文字
@@ -226,9 +226,9 @@ void display() {
  * 向指定地址发送GET请求, 并跳过响应头
  */
 bool sendRequest(const char* host, String path) {
-  Serial.printf("[INFO] Connecting to %s%s\n", host, path.c_str());
+  Serial.printf("Connecting to %s%s\n", host, path.c_str());
   if (!client.connect(host, 443)) {
-    Serial.println(" \t[WARN] Connection failed !");
+    Serial.println(" \tE: Connection failed!");
     return false;
   }
   client.println(
@@ -252,14 +252,14 @@ bool sendRequest(const char* host, String path) {
 void updateWeather() {
   if (!sendRequest(
         host, "/v3/weather/now.json?key=" + key + "&location=" + location + "&language=en")) {
-    Serial.println("[FAIL] updateWeather() failed !");
+    Serial.println("E: updateWeather() failed!");
     return;
   }
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, client);
   if (error) {
-    Serial.print("[FAIL] updateWeather() -> **deserializeJson()** failed !");
+    Serial.print("E: updateWeather() -> **deserializeJson()** failed!");
     client.stop();
     return;
   }
@@ -276,14 +276,14 @@ void updateWeather() {
 void updateForecastDaily() {
   if (!sendRequest(
         host, "/v3/weather/daily.json?key=" + key + "&location=" + location + "&language=en")) {
-    Serial.println("[FAIL] updateForecastDaily() failed !");
+    Serial.println("E: updateForecastDaily() failed!");
     return;
   }
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, client);
   if (error) {
-    Serial.print("[FAIL] updateForecastDaily() -> **deserializeJson()** failed !");
+    Serial.print("E: updateForecastDaily() -> **deserializeJson()** failed!");
     client.stop();
     return;
   }
