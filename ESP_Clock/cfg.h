@@ -1,10 +1,10 @@
 /* 配置文件
  */
 
-#define WIFI_SSID "ChinaNet-J6Fk"
-#define WIFI_PASS "DmgZg2312"
-const String key = "SvapyYFkj7EvAAqfG";
-const String location = "xian";
+#define WIFI_SSID "WiFi名"
+#define WIFI_PASS "WiFi密码"
+const String key = "API密钥";
+const String location = "城市名";
 
 #define DRAK_MODE 1 /* 暗色模式开关: `1` 代表启用 */
 
